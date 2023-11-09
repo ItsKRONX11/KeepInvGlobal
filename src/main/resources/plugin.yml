@@ -1,0 +1,9 @@
+name: KeepInvGlobal
+version: '${project.version}'
+main: me.itskronx11.keepinvglobal.KeepInvGlobal
+api-version: '1.20'
+folia-supported: true
+commands:
+  keepinv:
+    permission: 'keepinvglobal.use'
+
