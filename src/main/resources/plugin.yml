@@ -6,4 +6,6 @@ folia-supported: true
 commands:
   keepinv:
     permission: 'keepinvglobal.use'
+  keepinvstatus:
+    permission: 'keepinvglobal.use'
 
