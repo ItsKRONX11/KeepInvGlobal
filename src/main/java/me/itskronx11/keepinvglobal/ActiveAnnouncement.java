@@ -22,35 +22,7 @@ public class ActiveAnnouncement {
         this.end = end;
         this.config = main.getConfig();
     }
-    /*
     public void start() {
-        final GlobalRegionScheduler scheduler = Bukkit.getServer().getGlobalRegionScheduler();
-        
-        scheduler.execute(main, () -> Bukkit.getWorlds().forEach(world -> world.setGameRule(GameRule.KEEP_INVENTORY, true)));
-        announce(config.getString("three-hours"));
-
-        this.tasks = Arrays.asList(scheduler.runDelayed(main, (task) -> announce(config.getString("two-hours")), convertHours(1)),
-
-        scheduler.runDelayed(main, task -> announce(config.getString("one-hour")), convertHours(2)),
-
-        scheduler.runDelayed(main, task -> announce(config.getString("thirty-minutes")), convertHours(2) + convertMinutes(30)),
-
-        scheduler.runDelayed(main, task -> announce(config.getString("fifteen-minutes")), convertHours(2) + convertMinutes(45)),
-
-        scheduler.runDelayed(main, task -> announce(config.getString("five-minutes")), convertHours(2) + convertMinutes(55)),
-
-        scheduler.runDelayed(main, task -> announce(config.getString("one-minute")), convertHours(2) + convertMinutes(59)),
-
-        scheduler.runDelayed(main, task -> announce(config.getString("five-seconds")), convertHours(2) + convertMinutes(59) + convertSeconds(55)),
-
-        scheduler.runDelayed(main, task -> {
-            announce(config.getString("finished"));
-            Bukkit.getWorlds().forEach(world -> world.setGameRule(GameRule.KEEP_INVENTORY, false));
-            main.setCurrentAnnouncement(null);
-        }, convertHours(3)));
-    }
-     */
-    public void start0() {
         long remaining = end - System.currentTimeMillis();
 
         if (remaining >= TimeUnit.HOURS.toMillis(3))

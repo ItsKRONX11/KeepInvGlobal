@@ -47,6 +47,6 @@ public final class KeepInvGlobal extends JavaPlugin {
             e.printStackTrace();
         }
         if (currentAnnouncement != null)
-            currentAnnouncement.start0();
+            currentAnnouncement.start();
     }
 }
