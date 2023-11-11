@@ -1,57 +1,52 @@
 package me.itskronx11.keepinvglobal;
 
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ActiveAnnouncement {
-    private final List<ScheduledTask> tasks = new ArrayList<>();
     private final KeepInvGlobal main;
     private final FileConfiguration config;
-    private final long end;
+    private final long time;
+    private long started;
     private final MiniMessage mm = MiniMessage.miniMessage();
-    public ActiveAnnouncement(KeepInvGlobal main, long end) {
+    public ActiveAnnouncement(KeepInvGlobal main, long time) {
         this.main = main;
-        this.end = end;
+        this.time = time;
         this.config = main.getConfig();
     }
     public void start() {
-        long remaining = end - System.currentTimeMillis();
+        this.started = System.currentTimeMillis();
+        if (time >= TimeUnit.HOURS.toMillis(3)) {
+            Bukkit.getGlobalRegionScheduler().execute(main, () -> announce(config.getString("three-hours")));
+            main.setKeepInventory(true);
+        }
+        if (time >= TimeUnit.HOURS.toMillis(2))
+            schedule("two-hours", time - TimeUnit.HOURS.toMillis(2));
+        if (time >= TimeUnit.HOURS.toMillis(1))
+            schedule("one-hour", time - TimeUnit.HOURS.toMillis(1));
+        if (time >= TimeUnit.MINUTES.toMillis(30))
+            schedule("thirty-minutes", time - TimeUnit.MINUTES.toMillis(30));
+        if (time >= TimeUnit.MINUTES.toMillis(15))
+            schedule("fifteen-minutes", time - TimeUnit.MINUTES.toMillis(15));
+        if (time >= TimeUnit.MINUTES.toMillis(5))
+            schedule("five-minutes", time - TimeUnit.MINUTES.toMillis(5));
+        if (time >= TimeUnit.MINUTES.toMillis(1))
+            schedule("one-minute", time - TimeUnit.MINUTES.toMillis(1));
+        if (time >= TimeUnit.SECONDS.toMillis(5))
+            schedule("five-seconds", time - TimeUnit.SECONDS.toMillis(5));
 
-        if (remaining >= TimeUnit.HOURS.toMillis(3))
-            schedule("three-hours", end -TimeUnit.HOURS.toMillis(3));
-        if (remaining >= TimeUnit.HOURS.toMillis(2))
-            schedule("two-hours", end -TimeUnit.HOURS.toMillis(2));
-        if (remaining >= TimeUnit.HOURS.toMillis(1))
-            schedule("one-hour", end -TimeUnit.HOURS.toMillis(1));
-        if (remaining >= TimeUnit.MINUTES.toMillis(30))
-            schedule("thirty-minutes", end -TimeUnit.MINUTES.toMillis(30));
-        if (remaining >= TimeUnit.MINUTES.toMillis(15))
-            schedule("fifteen-minutes", end -TimeUnit.MINUTES.toMillis(15));
-        if (remaining >= TimeUnit.MINUTES.toMillis(5))
-            schedule("five-minutes", end -TimeUnit.MINUTES.toMillis(5));
-        if (remaining >= TimeUnit.MINUTES.toMillis(1))
-            schedule("one-minute", end - TimeUnit.MINUTES.toMillis(1));
-        if (remaining >= TimeUnit.SECONDS.toMillis(5))
-            schedule("five-seconds", end - TimeUnit.SECONDS.toMillis(5));
-
-        schedule(end, () -> {
+        schedule(time, () -> {
             announce(config.getString("finished"));
             Bukkit.getWorlds().forEach(world -> world.setGameRule(GameRule.KEEP_INVENTORY, false));
             main.setCurrentAnnouncement(null);
         });
-
-
-
     }
-
     public void announce(Component component) {
         Bukkit.getConsoleSender().sendMessage(component);
         Bukkit.getOnlinePlayers().forEach(player -> player.sendMessage(component));
@@ -60,29 +55,27 @@ public class ActiveAnnouncement {
         this.announce(mm.deserialize(minimessage));
     }
     public void cancel() {
-        if (this.tasks != null)
-            this.tasks.forEach(ScheduledTask::cancel);
+        main.setKeepInventory(false);
+        Bukkit.getGlobalRegionScheduler().cancelTasks(main);
     }
-    public void schedule(String configPath, long timeMillis) {
-        this.schedule(timeMillis, () -> announce(config.getString(configPath)));
+    public void schedule(String configPath, long time) {
+        this.schedule(time, () -> announce(config.getString(configPath)));
     }
-    public void schedule(long timeMillis, Runnable runnable) {
-        this.tasks.add(Bukkit.getGlobalRegionScheduler().runDelayed(main, task -> runnable.run(), convertSeconds(TimeUnit.MILLISECONDS.toSeconds(timeMillis - System.currentTimeMillis()))));
+    public void schedule(long delay, Runnable runnable) {
+        GlobalRegionScheduler scheduler = Bukkit.getGlobalRegionScheduler();
+
+        long delaySeconds = convertSeconds(TimeUnit.MILLISECONDS.toSeconds(delay));
+
+        scheduler.runDelayed(main, task -> runnable.run(), delaySeconds);
     }
 
     public static long convertSeconds(long seconds) {
         return seconds * 20;
     }
-    public static long convertMinutes(long minutes) {
-        return convertSeconds(TimeUnit.MINUTES.toSeconds(minutes));
+    public long getTime() {
+        return this.time;
     }
-    public static long convertHours(long hours) {
-        return convertSeconds(TimeUnit.HOURS.toSeconds(hours));
-    }
-    public static long ticksFromNow(long time) {
-        return convertSeconds(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - time));
-    }
-    public long getEnd() {
-        return this.end;
+    public long getStarted() {
+        return this.started;
     }
 }

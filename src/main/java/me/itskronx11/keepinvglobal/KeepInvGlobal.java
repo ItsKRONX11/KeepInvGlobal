@@ -1,6 +1,7 @@
 package me.itskronx11.keepinvglobal;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameRule;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -33,20 +34,31 @@ public final class KeepInvGlobal extends JavaPlugin {
         }
 
         this.getCommand("keepinv").setExecutor(new KeepInvCommand(this));
-        this.getCommand("keepinvstatus").setExecutor(new KeepInvStatusCommand(this));
     }
     public ActiveAnnouncement getCurrentAnnouncement() {
         return this.currentAnnouncement;
     }
     public void setCurrentAnnouncement(ActiveAnnouncement currentAnnouncement) {
+        if (this.currentAnnouncement != null)
+            this.currentAnnouncement.cancel();
+
+        if (currentAnnouncement != null)
+            currentAnnouncement.start();
+
         this.currentAnnouncement = currentAnnouncement;
-        this.last.set("last-announcement", currentAnnouncement == null ? 0 : currentAnnouncement.getEnd());
+    }
+    @Override
+    public void onDisable() {
+        Bukkit.getGlobalRegionScheduler().cancelTasks(this);
+        this.last.set("last-announcement", currentAnnouncement == null ? 0 : (currentAnnouncement.getStarted() + currentAnnouncement.getTime()) - System.currentTimeMillis());
         try {
             this.last.save(new File(this.getDataFolder(), "last.yml"));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (currentAnnouncement != null)
-            currentAnnouncement.start();
+    }
+
+    public void setKeepInventory(boolean keepInventory) {
+        Bukkit.getGlobalRegionScheduler().execute(this, () -> Bukkit.getWorlds().forEach(world -> world.setGameRule(GameRule.KEEP_INVENTORY, keepInventory)));
     }
 }
