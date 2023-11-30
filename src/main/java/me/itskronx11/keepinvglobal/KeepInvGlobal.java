@@ -16,6 +16,12 @@ public final class KeepInvGlobal extends JavaPlugin {
     public void onEnable() {
         this.saveDefaultConfig();
 
+        FileConfiguration config = getConfig();
+        if (!config.contains("prefix")) {
+            config.set("prefix", "<blue>[KeepInv]");
+            saveConfig();
+        }
+
         File last = new File(this.getDataFolder(), "last.yml");
         if (!last.exists()) {
             try {

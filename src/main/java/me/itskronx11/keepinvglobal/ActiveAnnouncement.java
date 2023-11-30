@@ -52,7 +52,7 @@ public class ActiveAnnouncement {
         Bukkit.getOnlinePlayers().forEach(player -> player.sendMessage(component));
     }
     public void announce(String minimessage) {
-        this.announce(mm.deserialize(minimessage));
+        this.announce(mm.deserialize(config.getString("prefix") + minimessage));
     }
     public void cancel() {
         main.setKeepInventory(false);
